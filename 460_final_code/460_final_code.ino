@@ -36,6 +36,25 @@ const int allHippoServos[NUM_HIPPO_SERVO] = {HIPPO1_SERVO, HIPPO2_SERVO, HIPPO3_
 
 Servo hippoServo[NUM_HIPPO_SERVO];
 
+// Game Config
+#define GAME_DURATION_S 30
+#define END_GAME_WAIT_S 5
+
+enum state {
+  IDLE,
+  START,
+  PLAYING,
+  END,
+};
+
+// Game Globals
+int score = 0;
+int timeLeft = 0;
+int pennyInserted = 0;
+state CS = IDLE;
+state NS = IDLE;
+long prevTime = 0;
+
 // Functions
 
 // Display Control
@@ -115,6 +134,28 @@ void ServoSetAngle(int angle)
   }
 }
 
+// Sensor Reading
+void SensorISR_Normal()
+{
+// points ++
+}
+
+void SensorISR_Double()
+{
+// points += 2
+}
+
+void SensorInit()
+{
+  for(int i = 0; i < NUM_HIPPO_SENSORS; ++i)
+  {
+    if(i < 5)
+      attachInterrupt(digitalPinToInterrupt(allHippoSensors[i]), SensorISR_Normal, RISING);
+    else
+      attachInterrupt(digitalPinToInterrupt(allHippoSensors[i]), SensorISR_Double, RISING);
+  }
+}
+
 // Setup Function (Runs on Startup)
 void setup() {
   // LCD Display Init
@@ -126,5 +167,65 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  DisplayCountdown(0);
+  //DisplayCountdown(0);
+  long time = millis();
+  long timeElapsed = time - prevTime;
+
+  switch(CS)
+  {
+    case IDLE:
+      if(pennyInserted == HIGH)
+      {
+        NS = START;
+      } else
+      {
+        NS = IDLE;
+      }
+      break;
+    case START:
+      if(timeLeft == GAME_DURATION_S)
+      {
+        NS = PLAYING;
+      } else if(timeLeft == 0)
+      {
+        NS = START;
+      }
+      break;
+    case PLAYING:
+      if(timeLeft < GAME_DURATION_S && timeLeft > 0)
+      {
+        NS = PLAYING;
+      } else
+      {
+        NS = END;
+      }
+      break;
+    case END:
+      if(timeElapsed >= END_GAME_WAIT_S*1000)
+      {
+        NS = IDLE;
+      } else
+      {
+        NS = END;
+      }
+      break;
+  }
+
+    switch(CS)
+  {
+    case IDLE:
+
+      break;
+    case START:
+
+      break;
+    case PLAYING:
+
+      break;
+    case END:
+
+      break;
+  }
+
+  CS = NS;
 }
