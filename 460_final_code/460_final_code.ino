@@ -58,7 +58,7 @@ enum state {
   IDLE,
   START,
   PLAYING,
-  END
+ END
 };
 
 // ------------------------------------
@@ -70,7 +70,6 @@ unsigned int pennyInserted = 0;
 state CS = IDLE;
 state NS = IDLE;
 unsigned long prevTime = 0;
-unsigned int difficulty = 0;
 
 // ------------------------------------
 // ISR Debounce Tracking
@@ -104,12 +103,8 @@ void _DisplayWrite(int startDigit, int value) {
 
 void DisplayWrite(int disp, int value) {
   switch (disp) {
-    case 0:
-      _DisplayWrite(DISPLAY_LEFT, value);
-      break;
-    case 1:
-      _DisplayWrite(DISPLAY_RIGHT, value);
-      break;
+    case 0: _DisplayWrite(DISPLAY_LEFT, value); break;
+    case 1: _DisplayWrite(DISPLAY_RIGHT, value); break;
     case 2:
       _DisplayWrite(DISPLAY_LEFT, value);
       _DisplayWrite(DISPLAY_RIGHT, value);
@@ -130,6 +125,49 @@ void DisplayUpdateCounters(int timeLeft, int score) {
   DisplayWrite(1, score);
 }
 
+// ----------------------------------------------------------------------
+// IDLE DISPLAY ANIMATION (Rolling numbers)
+// ----------------------------------------------------------------------
+void IdleAnimation_Rolling() {
+  static unsigned long lastRoll = 0;
+  static int rollValue = 0;
+
+  if (millis() - lastRoll > 150) {
+    lastRoll = millis();
+    rollValue = (rollValue + 1) % 10000;
+
+    DisplayWrite(0, rollValue);
+    DisplayWrite(1, 9999 - rollValue);
+  }
+}
+
+// ----------------------------------------------------------------------
+// IDLE HIPPO ANIMATION (one hippo opens at a time)
+// ----------------------------------------------------------------------
+void IdleAnimation_HippoCycle() {
+  static unsigned long lastMove = 0;
+  static int currentHippo = 0;
+
+  if (millis() - lastMove > 700) {
+    lastMove = millis();
+
+    // Close all hippos
+    for (int i = 0; i < NUM_HIPPO_SERVO; i++)
+      hippoServo[i].write(HIPPO_ANGLE_CLOSED);
+
+    // Open one hippo
+    hippoServo[currentHippo].write(HIPPO_ANGLE_OPEN);
+
+    currentHippo = (currentHippo + 1) % NUM_HIPPO_SERVO;
+  }
+}
+
+// Run both idle animations
+void RunIdleAnimations() {
+  IdleAnimation_Rolling();
+  IdleAnimation_HippoCycle();
+}
+
 // Servos --------------------------------------------------------------
 
 void ServoSetup() {
@@ -142,15 +180,13 @@ void ServoSetup() {
 }
 
 void ServoReset() {
-  for (int i = 0; i < NUM_HIPPO_SERVO; ++i) {
+  for (int i = 0; i < NUM_HIPPO_SERVO; ++i)
     hippoServo[i].write(HIPPO_ANGLE_CLOSED);
-  }
 }
 
 void ServoSetAngle(int angle) {
-  for (int i = 0; i < NUM_HIPPO_SERVO; ++i) {
+  for (int i = 0; i < NUM_HIPPO_SERVO; ++i)
     hippoServo[i].write(angle);
-  }
 }
 
 void ServoOpenHippoMouth() {
@@ -162,9 +198,8 @@ void ServoOpenHippoMouth() {
 // Sensor Interrupt Handlers -------------------------------------------
 
 void SensorISR_Normal() {
-  int sensorIndex = 0;  // HIPPO1 or HIPPO2 maps here
+  int sensorIndex = 0;
   unsigned long now = millis();
-
   if (now - lastTriggerTime[sensorIndex] >= SENSOR_DEBOUNCE_MS) {
     score++;
     lastTriggerTime[sensorIndex] = now;
@@ -172,9 +207,8 @@ void SensorISR_Normal() {
 }
 
 void SensorISR_Normal2() {
-  int sensorIndex = 1;  // HIPPO2
+  int sensorIndex = 1;
   unsigned long now = millis();
-
   if (now - lastTriggerTime[sensorIndex] >= SENSOR_DEBOUNCE_MS) {
     score++;
     lastTriggerTime[sensorIndex] = now;
@@ -182,9 +216,8 @@ void SensorISR_Normal2() {
 }
 
 void SensorISR_Double() {
-  int sensorIndex = 2;  // HIPPO3 double score
+  int sensorIndex = 2;
   unsigned long now = millis();
-
   if (now - lastTriggerTime[sensorIndex] >= SENSOR_DEBOUNCE_MS) {
     score += 2;
     lastTriggerTime[sensorIndex] = now;
@@ -200,9 +233,8 @@ void EnableSensorInterrupts() {
 }
 
 void DisableSensorInterrupts() {
-  for (int i = 0; i < NUM_HIPPO_SENSORS; i++) {
+  for (int i = 0; i < NUM_HIPPO_SENSORS; i++)
     detachInterrupt(digitalPinToInterrupt(allHippoSensors[i]));
-  }
 }
 
 // ====================================================================
@@ -213,7 +245,7 @@ void setup() {
   DisplayReset();
   ServoSetup();
   PennyInit();
-  DisableSensorInterrupts();  // start safe
+  DisableSensorInterrupts();
 }
 
 // ====================================================================
@@ -227,7 +259,6 @@ void loop() {
   // -------------------------
   // STATE TRANSITION LOGIC
   //-------------------------
-
   switch (CS) {
     case IDLE:
       pennyInserted = digitalRead(PENNY_PIN);
@@ -250,11 +281,11 @@ void loop() {
   // -------------------------
   // STATE ACTIONS
   //-------------------------
-
   switch (CS) {
 
     case IDLE:
       DisableSensorInterrupts();
+      RunIdleAnimations();
       break;
 
     case START:
