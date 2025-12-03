@@ -3,7 +3,7 @@
 
 ## Overview
 
-This Arduino project implements a **Hippo Feeding arcade game**. Players feed “food pellets” into hippo mouths by triggering infrared (IR) sensors. The goal is to score points before the timer runs out. The project includes:
+This project implements a **Hippo Feeding arcade game**. Players feed “food pellets” into hippo mouths by triggering infrared (IR) sensors. The goal is to score points before the timer runs out. The project includes:
 
 - 3 hippos with **servo-controlled mouths**
 - **IR sensors** to detect when a hippo is “fed”
@@ -23,7 +23,7 @@ This Arduino project implements a **Hippo Feeding arcade game**. Players feed �
 - Hippos open their mouths randomly while playing
 - Feed hippos to score points
   - Normal hippos: +1 point
-  - Special hippos: +2 points
+  - Baby hippo: +2 points
 - Timer counts down from 30 seconds
 - Final score displayed for 5 seconds after the game ends
 
@@ -41,8 +41,7 @@ This Arduino project implements a **Hippo Feeding arcade game**. Players feed �
 - 3x IR sensors
 - MAX7219 7-segment LED display module
 - Penny switch or button input
-- 5V regulated power supply (ensure proper grounding)
-- Connecting wires and breadboard (or custom PCB)
+- 5V regulated power supply
 
 ---
 
@@ -90,8 +89,6 @@ This Arduino project implements a **Hippo Feeding arcade game**. Players feed �
 ## Notes
 
 - Use a **clean, regulated 5V supply** for stable operation.  
-- Ensure all grounds are connected to avoid display glitches or servo issues.  
 - Sensor interrupts are **enabled only during PLAYING** to avoid false triggers.  
-- Idle animations make the machine more engaging while waiting for a player.
 
 ---
