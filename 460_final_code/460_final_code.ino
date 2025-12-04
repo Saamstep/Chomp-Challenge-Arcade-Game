@@ -165,7 +165,7 @@ void IdleAnimation_HippoCycle() {
 // Run both idle animations
 void RunIdleAnimations() {
   IdleAnimation_Rolling();
-  IdleAnimation_HippoCycle();
+  // IdleAnimation_HippoCycle();
 }
 
 // Servos --------------------------------------------------------------
@@ -193,6 +193,10 @@ void ServoOpenHippoMouth() {
   int servoNum = random(0, NUM_HIPPO_SERVO);
   ServoSetAngle(HIPPO_ANGLE_CLOSED);
   hippoServo[servoNum].write(HIPPO_ANGLE_OPEN);
+}
+
+void ServoCloseALLHippoMouth() {
+  ServoSetAngle(HIPPO_ANGLE_CLOSED);
 }
 
 // Sensor Interrupt Handlers -------------------------------------------
@@ -310,6 +314,7 @@ void loop() {
 
     case END:
       DisableSensorInterrupts();
+      ServoCloseALLHippoMouth();
 
       if (timeElapsed == 0) {
         DisplayWrite(0, 0);
